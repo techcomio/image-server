@@ -1,0 +1,26 @@
+{
+  "name": "image-server",
+  "version": "0.0.1",
+  "author": [
+    "tranduchieu <tranduchieu@me.com>",
+    "devalphac <devalphac@outlook.com>"
+  ],
+  "main": "app.js",
+  "private": true,
+  "scripts": {
+    "start": "node app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/techcomio/image-server.git"
+  },
+  "license": "BSD",
+  "dependencies": {
+    "busboy": "^0.2.9",
+    "connect-busboy": "0.0.2",
+    "express": "^4.13.0",
+    "gm": "^1.18.1",
+    "jade": "^1.11.0",
+    "moment": "^2.10.3"
+  }
+}
