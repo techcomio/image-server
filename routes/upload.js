@@ -1,4 +1,5 @@
 var express = require('express');
+var fs      = require('fs');
 var moment  = require('moment');
 var Knox    = require('knox');
 var promise = require('bluebird');
@@ -37,19 +38,12 @@ router.post('/', function(req, res, next) {
               reject('err size');
             }
 
-            console.log(img.size, (totalpixel) * 0.16)
-
             if(img.size >= (totalpixel) * 0.16) {
               var encodeHQ = (1 - (totalpixel * 0.16) / img.size) * 100;
-              this.quality(encodeHQ);
-              console.log('encodeHQ');
+              this.quality(encodeHQ); // chat luong anh
             }
 
-            // this.write('./public/' + img.name, function (err) {  // save file localhost
-            //   if (err) reject(err);
-            //   resolve({status: 'done'});
-            // });
-
+            /* put serve S3 */
             this.toBuffer(function(err, buffer) {
               if(err) reject('err image');
                  var datePrefix = moment().format('YYYY[/]MM');
