@@ -1,15 +1,36 @@
-var express = require('express');
-var http    = require('http');
-var path    = require('path');
-var routes  = require('./routes');
+var express     = require('express');
+var http     = require('http');
+var multer  = require('multer');
+var crypto  = require('crypto');
 
 var app = express();
 
+var upload = require('./routes/upload.js');
 
-var upload = require('./routes/index.js');
+
 // all environments
 app.set('port', process.env.PORT || 3000);
-
+app.use(multer({ // https://github.com/expressjs/multer
+  dest: './public/uploads/', 
+  rename: function (fieldname, filename) {
+    var key = crypto.randomBytes(10).toString('hex');
+    return key + '-' + filename.replace(/\W+/g, '-').toLowerCase();
+  },
+  onFileUploadStart: function(file) {
+    console.log('Starting file upload process.');
+    if(! /\/(png|gif|jpg|jpeg|pjpeg)$/i.test(file.mimetype)) {
+      return false;
+    }
+  },
+  onParseEnd: function(req, next) {
+    console.log('Done parsing!');
+    next();
+  },
+  onError: function(err, next) {
+    next(err);
+  },
+  inMemory: true //This is important. It's what populates the buffer.
+}))
 
 app.use('/upload', upload);
 

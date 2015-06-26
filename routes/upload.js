@@ -1,7 +1,5 @@
 var express = require('express');
-var multer  = require('multer');
 var moment  = require('moment');
-var crypto  = require('crypto');
 var Knox    = require('knox');
 var promise = require('bluebird');
 var gm      = require('gm').subClass({imageMagick: true});
@@ -15,38 +13,13 @@ Knox.aws = Knox.createClient({
   key    : config.aws.AWS_ACCESS_KEY_ID,
   secret : config.aws.AWS_SECRET_ACCESS_KEY,
   bucket : config.aws.S3_BUCKET_NAME,
-  region : 'ap-southeast-1', // asian
-  // region : 'eu-west-1'   // US
+  region : 'ap-southeast-1', // Asia
 });
-
-router.use(multer({ // https://github.com/expressjs/multer
-  dest: './public/uploads/', 
-  rename: function (fieldname, filename) {
-    var datePrefix = moment().format('YYYY[/]MM');
-    var key = crypto.randomBytes(10).toString('hex');
-    return key + '-' + filename.replace(/\W+/g, '-').toLowerCase();
-  },
-  onFileUploadStart: function(file) {
-    console.log('Starting file upload process.');
-    if(! /\/(png|gif|jpg|jpeg|pjpeg)$/i.test(file.mimetype)) {
-      return false;
-    }
-  },
-  onParseEnd: function(req, next) {
-    console.log('Done parsing!');
-    next();
-  },
-  onError: function(err, next) {
-    next(err);
-  },
-  inMemory: true //This is important. It's what populates the buffer.
-}))
 
 router.post('/', function(req, res, next) {
 
   if(req.files !== undefined && req.files.image) {
-    var images = req.files.image;
-    
+    var images = [].concat(req.files.image)
 
     function resizeAndPostS3(img) {
       return new Promise(function(resolve, reject) {
@@ -72,16 +45,15 @@ router.post('/', function(req, res, next) {
               console.log('encodeHQ');
             }
 
-            // this.write('./out/' + img.name, function (err) {  // save file localhost
-            //   if (!err) resolve({status: 'done'});
-            //   reject(err);
+            // this.write('./public/' + img.name, function (err) {  // save file localhost
+            //   if (err) reject(err);
+            //   resolve({status: 'done'});
             // });
-
 
             this.toBuffer(function(err, buffer) {
               if(err) reject('err image');
-
-                var pathToArtwork = '/artworks/' + img.name;
+                 var datePrefix = moment().format('YYYY[/]MM');
+                var pathToArtwork = '/artworks/' +  datePrefix + '/' + img.name;
 
                 var headers = {
                   'Content-Length': buffer.length,
@@ -109,26 +81,18 @@ router.post('/', function(req, res, next) {
       });
     }
 
-
-    if(Array.isArray(images)) {
-      promise.map(images, function(img) {
-        return resizeAndPostS3(img).then(function(result) {
-          return result;
-        }).catch(function(err) {
-          return err;
-        });
-      }).then(function(result) {
-        res.send(result);
+    promise.map(images, function(img) {
+      return resizeAndPostS3(img).then(function(result) {
+        return result;
       }).catch(function(err) {
-        next(err);
+        return err;
       });
-    } else {
-      resizeAndPostS3(images).then(function(result) {
-        res.send(result);
-      }).catch(function(err) {
-        next(err);
-      })
-    }
+    }).then(function(result) {
+      res.send(result);
+    }).catch(function(err) {
+      next(err);
+    });
+
   } else {
     var err = new Error('null file');
     next(err);
