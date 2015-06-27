@@ -46,8 +46,7 @@ router.post('/', function(req, res, next) {
             /* put serve S3 */
             this.toBuffer(function(err, buffer) {
               if(err) reject('err image');
-                 var datePrefix = moment().format('YYYY[/]MM');
-                var pathToArtwork = '/artworks/' +  datePrefix + '/' + img.name;
+                var pathToArtwork = '/artworks/' +  img.name;
 
                 var headers = {
                   'Content-Length': buffer.length,

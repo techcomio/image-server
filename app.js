@@ -2,14 +2,40 @@ var express     = require('express');
 var http     = require('http');
 var multer  = require('multer');
 var crypto  = require('crypto');
+var IMGR    = require('imgr').IMGR;
 
 var app = express();
+var imgr = new IMGR();
 
 var upload = require('./routes/upload.js');
 
 
 // all environments
 app.set('port', process.env.PORT || 3000);
+
+/**
+ * get image size S3
+ * 
+ * default '/:path/:size/:file.:ext'
+ * /img/960x640/foobar.jpg
+ *
+ * Another example '/:path/:file-:size.:ext'
+ * /img/foobar-960x640.jpg
+ *
+ *
+ * image on S3
+ * https://tocu.s3-ap-southeast-1.amazonaws.com/artworks/86eebc70ad11ae9b322a-404-day-wallpaper.jpg
+ *
+ * get size
+ * http://localhost:3000/img/480x320/86eebc70ad11ae9b322a-404-day-wallpaper.jpg
+ */
+imgr.serve('https://tocu.s3-ap-southeast-1.amazonaws.com/artworks/')
+    .namespace('/img')
+    .urlRewrite('/:path/:size/:file.:ext')
+    .whitelist([ '960x640', '640x426', '480x320', '320x213' ])
+    .using(app);
+
+
 app.use(multer({ // https://github.com/expressjs/multer
   dest: './public/uploads/', 
   rename: function (fieldname, filename) {
