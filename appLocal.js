@@ -1,6 +1,5 @@
 var express     = require('express');
 var http        = require('http');
-var compression = require('compression');
 var multer      = require('multer');
 var crypto      = require('crypto');
 
@@ -11,7 +10,6 @@ var upload = require('./routes/uploadLocal.js');
 
 // all environments
 app.set('port', process.env.PORT || 3000);
-app.use(compression());
 app.use('/img', express.static(__dirname + "/public/uploads", {maxage: 8640000}));
 
 app.use(multer({ // https://github.com/expressjs/multer

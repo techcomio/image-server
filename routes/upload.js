@@ -7,7 +7,7 @@ var gm      = require('gm').subClass({imageMagick: true});
 
 
 var router = express.Router();
-var config = require('../config/' + process.env.NODE_ENV);
+var config = require('../'+ process.env.NODE_ENV + '/config.json');
 
 // Create the knox client with your aws settings
 Knox.aws = Knox.createClient({
