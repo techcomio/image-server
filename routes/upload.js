@@ -1,21 +1,12 @@
 var express = require('express');
-var fs      = require('fs');
-var moment  = require('moment');
-var Knox    = require('knox');
+var moment = require('moment');
 var promise = require('bluebird');
-var gm      = require('gm').subClass({imageMagick: true});
-
+var moment = require('moment');
+var mkdirp = require('mkdirp');
+var gm = require('gm').subClass({imageMagick: true});
 
 var router = express.Router();
-var config = require('../'+ process.env.NODE_ENV + '/config.json');
 
-// Create the knox client with your aws settings
-Knox.aws = Knox.createClient({
-  key    : config.aws.AWS_ACCESS_KEY_ID,
-  secret : config.aws.AWS_SECRET_ACCESS_KEY,
-  bucket : config.aws.S3_BUCKET_NAME,
-  region : 'ap-southeast-1', // Asia
-});
 
 router.post('/', function(req, res, next) {
 
@@ -43,33 +34,15 @@ router.post('/', function(req, res, next) {
               this.quality(encodeHQ); // chat luong anh
             }
 
-            /* put serve S3 */
-            this.toBuffer(function(err, buffer) {
-              if(err) reject('err image');
-                var pathToArtwork = '/artworks/' +  img.name;
-
-                var headers = {
-                  'Content-Length': buffer.length,
-                  'Content-Type': img.mimetype,
-                  'x-amz-acl': 'public-read'
-                };
-
-                Knox.aws.putBuffer( buffer, pathToArtwork, headers, function(err, response) {
-                  if (err) {
-                    console.error('error streaming image: ', new Date(), err);
-                    reject(err)
-                  }
-                  if (response.statusCode !== 200) {
-                    console.error('error streaming image: ', new Date());
-                    var error = new Error('error streaming image');
-                    reject(error);
-                  }
-                  // console.log(response);
-                  console.log('Amazon response statusCode: ', response.statusCode);
-                  console.log('Your file was uploaded');
-                  resolve(response.req.url);
-                });
-            });
+            var today = moment().format("YYYY/MM/DD");
+            mkdirp(`./public/uploads/${today}`, function (err) {
+              if (err) reject(err);
+              /* save local */
+              this.write(`./public/uploads/${today}/${img.name}`, function (err) {
+                if (err) reject(err);
+                resolve(`${today}/${img.name}`);
+              });
+            }.bind(this));
           });
       });
     }

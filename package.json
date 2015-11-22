@@ -1,31 +1,28 @@
 {
   "name": "image-server",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "author": [
-    "tranduchieu <tranduchieu@me.com>",
-    "devalphac <devalphac@outlook.com>"
+    "ngthong <ngthorg@gmail.com>"
   ],
   "main": "app.js",
   "private": true,
   "scripts": {
-    "start": "node app.js",
-    "local": "node appLocal.js"
+    "start": "node app.js"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/techcomio/image-server.git"
   },
-  "license": "BSD",
+  "license": "BSD-3-Clause",
   "dependencies": {
-    "bluebird": "^2.9.30",
-    "busboy": "^0.2.9",
+    "bluebird": "^2.10.2",
+    "busboy": "^0.2.12",
     "connect-busboy": "0.0.2",
-    "express": "^4.13.0",
-    "gm": "^1.18.1",
-    "imgr": "devalphac/imgr#d3681c1de3b4b970e86e1b6bd984eaf1aa86a6a2",
-    "jade": "^1.11.0",
-    "knox": "^0.9.2",
-    "moment": "^2.10.3",
+    "express": "^4.13.3",
+    "gm": "^1.21.1",
+    "imgr": "^0.10.4",
+    "mkdirp": "^0.5.1",
+    "moment": "^2.10.6",
     "multer": "^0.1.8"
   }
 }

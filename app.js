@@ -1,56 +1,38 @@
-var express     = require('express');
-var http     = require('http');
-var multer  = require('multer');
-var crypto  = require('crypto');
-var IMGR    = require('imgr').IMGR;
-
+var express = require('express');
+var http = require('http');
+var multer = require('multer');
+var crypto = require('crypto');
+var IMGR = require('imgr').IMGR;
+var upload = require('./routes/upload.js');
 var app = express();
 var imgr = new IMGR();
+const env = process.env.NODE_ENV || 'development';
+const port = process.env.PORT || 3000;
 
-var upload = require('./routes/upload.js');
 
-
-// all environments
-app.set('port', process.env.PORT || 3000);
-
-/**
- * get image size S3
- * 
- * default '/:path/:size/:file.:ext'
- * /img/960x640/foobar.jpg
- *
- * Another example '/:path/:file-:size.:ext'
- * /img/foobar-960x640.jpg
- *
- *
- * image on S3
- * https://tocu.s3-ap-southeast-1.amazonaws.com/artworks/86eebc70ad11ae9b322a-404-day-wallpaper.jpg
- *
- * get size
- * http://localhost:3000/img/480x320/86eebc70ad11ae9b322a-404-day-wallpaper.jpg
- */
-imgr.serve('https://tocu.s3-ap-southeast-1.amazonaws.com/artworks/')
-    .namespace('/img')
-    .urlRewrite('/:path/:size/:file.:ext')
-    .whitelist([ '960x640', '640x426', '480x320', '320x213' ])
+imgr.serve('./public/uploads')
+    .namespace('/images')
+    .urlRewrite('/:path/:file-:size.:ext')
+    .whitelist([ '200x300', '100x100' ])
     .using(app);
+/**
+ * Example: http://localhost:3000/images/2015/11/22/126a1fe2930c6b6db1e048a60dab499cee6d0483-200x300.jpg
+ */
 
 
 app.use(multer({ // https://github.com/expressjs/multer
-  dest: './public/uploads/', 
+  dest: './public/uploads/',
   rename: function (fieldname, filename) {
-    var key = crypto.randomBytes(10).toString('hex');
-    return key + '-' + filename.replace(/\W+/g, '-').toLowerCase();
+    /**
+     * var key = crypto.randomBytes(10).toString('hex');
+     * return key + '-' + filename.replace(/\W+/g, '-').toLowerCase();
+     */
+    return crypto.randomBytes(20).toString('hex');
   },
   onFileUploadStart: function(file) {
-    console.log('Starting file upload process.');
     if(! /\/(png|gif|jpg|jpeg|pjpeg)$/i.test(file.mimetype)) {
       return false;
     }
-  },
-  onParseEnd: function(req, next) {
-    console.log('Done parsing!');
-    next();
   },
   onError: function(err, next) {
     next(err);
@@ -61,35 +43,26 @@ app.use(multer({ // https://github.com/expressjs/multer
 app.use('/upload', upload);
 
 app.use(function(req, res, next) {
-    var err = new Error('Not Found');
-    err.status = 404;
-    next(err);
-});
+  var err = new Error('Not Found!');
+  err.status = 404;
+  next(err);
+})
 
-/// error handlers
-
-// development error handler
-// will print stacktrace
-if (app.get('env') === 'development') {
-    app.use(function(err, req, res, next) {
-        res.status(err.status || 500);
-        res.json({
-            message: err.message,
-            error: err
-        });
-    });
-}
-
-// production error handler
-// no stacktraces leaked to user
 app.use(function(err, req, res, next) {
-    res.status(err.status || 500);
+  var status = err.status || 500;
+  res.status(status);
+  if(env === "development") {
     res.json({
-        message: err.message,
-        error: {}
+      message: err.message,
+      status: status
     });
-});
+    return;
+  }
+  err.status ?
+	  res.send(err.message) :
+	  res.send('Internal server error');
+})
 
-http.createServer(app).listen(app.get('port'), function(){
-  console.log('Express server listening on port ' + app.get('port'));
+http.createServer(app).listen(port, function(){
+  console.log('Express server listening on port ' + port);
 });
